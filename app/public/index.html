@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compteur Web</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    #counter { font-size: 2em; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Compteur Web</h1>
+  <button id="incrementButton">Incrémenter le compteur</button>
+  <div id="counter">0</div>
+
+  <script>
+    const counterDiv = document.getElementById('counter');
+    const incrementButton = document.getElementById('incrementButton');
+
+    // Fonction pour récupérer et afficher la dernière valeur du compteur
+    async function getCounterValue() {
+      const response = await fetch('/get-counter');
+      const data = await response.json();
+      counterDiv.innerText = data[0].count;  // Afficher la valeur du compteur
+    }
+
+    // Mettre à jour le compteur après chaque clic
+    incrementButton.onclick = async () => {
+      // Incrémenter le compteur via la route POST
+      const response = await fetch('/increment', { method: 'POST' });
+      const data = await response.json();
+
+      // Mettre à jour l'affichage du compteur
+      counterDiv.innerText = data.count;
+      document.getElementById("counter").innerText = data.count;
+
+    };
+
+    // Initialiser le compteur au chargement de la page
+    getCounterValue();
+  </script>
+</body>
+</html>
