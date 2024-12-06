@@ -1,26 +1,15 @@
-version: '3'
+version: '3.8'
+
 services:
-  web:
+  app:
     build: ./app
     ports:
-      - 3000:3000
-    depends_on:
-      - mongo
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/mydatabase
     networks:
-      - app-network
-
-  mongo:
-    image: mongo:latest
-    container_name: mongo
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - app-network
+      - my-app-network
 
 networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mongo_data:
-
+  my-app-network:
+    external: true  # Utiliser un réseau existant

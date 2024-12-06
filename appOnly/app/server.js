@@ -31,7 +31,7 @@ app.post('/increment', async (req, res) => {
   // Récupérer le dernier compteur
   console.log('nouveau clique')
   const lastCountData = await Counter.find().sort({ timestamp: -1 }).limit(1);
-  console.log(lastCountData[0].count)
+  console.log(lastCountData)
   const newCount = lastCountData.length > 0 ? lastCountData[0].count + 1 : 1;
   console.log(newCount)
 
