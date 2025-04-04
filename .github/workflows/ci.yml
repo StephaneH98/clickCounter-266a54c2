@@ -63,8 +63,9 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest .
 
+      # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
           format: 'table'
