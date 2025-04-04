@@ -41,7 +41,8 @@ jobs:
             -X POST \
             -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
             https://hub.docker.com/v2/users/login/ | jq -r .token)
-          echo "token=$TOKEN\nusername="$DOCKER_HUB_USERNAME""
+          test="$DOCKER_HUB_USERNAME"
+          echo "token=$TOKEN\nusername=$test"
           echo "token=$TOKEN" >> $GITHUB_ENV
 
       - name: Get Docker image tags list
