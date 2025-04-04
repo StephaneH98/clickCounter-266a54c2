@@ -72,12 +72,6 @@ jobs:
           output: 'trivy-scan-report.json'
           exit-code: '0'  # Faille => build n'échoue pas. Passer à 1 pour que ça échoue en cas de failles
       
-      # Créé un rapport 
-      - name: Upload Trivy Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: trivy-report
-          path: trivy-report.json
       
       # 🔹 Connexion à Docker Hub
       - name: Login to Docker Hub
