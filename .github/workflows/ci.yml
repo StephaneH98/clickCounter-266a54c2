@@ -64,10 +64,11 @@ jobs:
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest .
 
       - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
           format: 'table'
+          output: 'trivy-scan-report.json'
           exit-code: '0'  # Faille => build n'échoue pas. Passer à 1 pour que ça échoue en cas de failles
       
       # Créé un rapport 
