@@ -38,7 +38,10 @@ jobs:
             -X POST \
             -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' \
             https://hub.docker.com/v2/users/login/ | jq -r .token)
-          cat $TOKEN
+          curl -s -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token
           echo "token=$TOKEN" >> $GITHUB_ENV
 
       - name: Get Docker image tags list
