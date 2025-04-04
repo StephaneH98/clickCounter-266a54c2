@@ -31,11 +31,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-       # 🔹 Récupérer le dernier tag de l’image Docker Hub
+      - name: Get Docker Hub Token
+        id: get_token
+        run: |
+          TOKEN=$(curl -s -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          echo "token=$TOKEN" >> $GITHUB_ENV
+
+      # 🔹 Récupérer le dernier tag de l’image Docker Hub
       - name: Get latest Docker image tag
         id: get_latest_tag
         run: |
-          LATEST_TAG=$(curl -s "https://registry.hub.docker.com/v2/repositories/tonrepo/tonimage/tags" | jq -r '.results | map(.name) | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort | last')
+          LATEST_TAG=$(curl -s "https://registry.hub.docker.com/v2/repositories/stephanehamaili/webapp/tags" | jq -r '.results | map(.name) | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort | last')
           echo "Latest tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
 
@@ -52,12 +61,12 @@ jobs:
       # 🔹 Build Docker image avec les nouveaux tags
       - name: Build Docker image
         run: |
-          docker build -t tonrepo/tonimage:${{ env.new_tag }} -t tonrepo/tonimage:latest .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest .
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'myapp:latest'
+          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
           format: 'table'
           exit-code: '0'  # Faille => build n'échoue pas. Passer à 1 pour que ça échoue en cas de failles
       
@@ -70,12 +79,12 @@ jobs:
       
       # 🔹 Connexion à Docker Hub
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
 
       # 🔹 Push des images (nouvelle version + latest)
       - name: Push Docker image
         run: |
-          docker push tonrepo/tonimage:${{ env.new_tag }}
-          docker push tonrepo/tonimage:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
           
