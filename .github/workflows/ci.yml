@@ -65,7 +65,7 @@ jobs:
 
       # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
           format: 'table'
