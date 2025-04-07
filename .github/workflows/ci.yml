@@ -3,6 +3,7 @@ name: CI Pipeline Secure
 on:
   push:
     branches: [ main ]
+  workflow_dispatch: 
 
 jobs:
   # Analyse statique
