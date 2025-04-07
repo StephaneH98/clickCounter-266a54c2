@@ -54,7 +54,7 @@ jobs:
         run: |
           LATEST_TAG=$(echo "$TAG_LIST" | jq -r '.results | map(.name) | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort | last')
           echo "Latest tag: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
+          echo "$LATEST_TAG" >> $GITHUB_ENV
 
       # 🔹 Incrémentation automatique (ex: 1.0.3 → 1.0.4)
       - name: Increment tag
