@@ -55,7 +55,7 @@ jobs:
         id: increment_tag
         run: |
           NEW_PATCH=$((PATCH + 1))
-          echo "$NEW_PATCH" >> $GITHUB_ENV
+          echo "NEW_PATCH=$NEW_PATCH" >> $GITHUB_ENV
 
       # 🔹 Build Docker image avec les nouveaux tags
       - name: Build Docker image
