@@ -62,7 +62,7 @@ jobs:
         run: |
           NEW_TAG="${MAJOR}.${MINOR}.${NEW_PATCH}"
           ls
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appWithDB/app
 
       # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
