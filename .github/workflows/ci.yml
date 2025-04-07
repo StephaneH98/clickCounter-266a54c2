@@ -60,8 +60,7 @@ jobs:
       # 🔹 Build Docker image avec les nouveaux tags
       - name: Build Docker image
         run: |
-          NEW_TAG="${MAJOR}.${MINOR}.${NEW_PATCH}"
-          ls
+          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appWithDB/app
 
       # 🔹 Scan de l'image avec Trivy
@@ -76,12 +75,14 @@ jobs:
       
       # 🔹 Connexion à Docker Hub
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+        run: |
+          echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
 
       # 🔹 Push des images (nouvelle version + latest)
       - name: Push Docker image
         run: |
+          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
           
