@@ -38,14 +38,11 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
-          echo "le token : $(curl -s -H "Content-Type: application/json" \
-            -X POST \
-            -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
-            https://hub.docker.com/v2/users/login/)"
-          TOKEN=$(curl -s -H "Content-Type: application/json" \
-            -X POST \
-            -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
-            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          echo "le token : $(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' https://hub.docker.com/v2/users/login/)"
+          # TOKEN=$(curl -s -H "Content-Type: application/json" \
+          #   -X POST \
+          #   -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
+          #   https://hub.docker.com/v2/users/login/ | jq -r .token)
           test="$DOCKER_HUB_USERNAME"
           echo "token=${TOKEN:0:5}\nusername=${test:0:5}"
           echo "token2=${DOCKER_HUB_TOKEN:0:5}"
