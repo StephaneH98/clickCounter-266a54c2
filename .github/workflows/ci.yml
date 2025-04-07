@@ -82,6 +82,6 @@ jobs:
       # 🔹 Push des images (nouvelle version + latest)
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
           
