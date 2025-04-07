@@ -37,6 +37,10 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
+          echo "le token : $(curl -s -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
+            https://hub.docker.com/v2/users/login/)"
           TOKEN=$(curl -s -H "Content-Type: application/json" \
             -X POST \
             -d '{"username": "$DOCKER_HUB_USERNAME", "password": "$DOCKER_HUB_TOKEN"}' \
