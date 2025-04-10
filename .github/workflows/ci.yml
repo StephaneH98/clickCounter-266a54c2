@@ -104,8 +104,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git clone https://x-access-token:${{ secrets.GIT_TOKEN_REPO_HELM }}@github.com/${{ secrets.GIT_USERNAME }}/${{ variable.HELM_REPOSITORY_NAME }}
-          cd ${{ variable.HELM_REPOSITORY_PATH }}
+          git clone https://x-access-token:${{ secrets.GIT_TOKEN_REPO_HELM }}@github.com/${{ secrets.GIT_USERNAME }}/${{ vars.HELM_REPOSITORY_NAME }}
+          cd ${{ vars.HELM_REPOSITORY_PATH }}
           ls
           
           # Remplacer l'image dans values.yaml (adapte selon ta structure YAML)
