@@ -113,10 +113,9 @@ jobs:
         run: |
           DIGEST=$(curl -sI -H "Authorization: JWT $TOKEN" \
             https://registry.hub.docker.com/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-            | grep Docker-Content-Digest | awk '{ print $2 }' | tr -d '\r')
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json")
           echo "Digest: $DIGEST"
-          echo "digest=$DIGEST" >> $GITHUB_ENV
+          # echo "digest=$DIGEST" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
