@@ -114,10 +114,12 @@ jobs:
           git clone https://x-access-token:${{ secrets.GIT_TOKEN_REPO_HELM }}@github.com/${{ secrets.GIT_USERNAME }}/${{ vars.HELM_REPOSITORY_NAME }}
           cd ${{ vars.HELM_REPOSITORY_PATH }}
           ls
+          cat ./values.yaml | grep repository
           
           # Remplacer l'image dans values.yaml (adapte selon ta structure YAML)
-          # sed -i "s|image:.*|image: '${{ secrets.DOCKER_HUB_USERNAME }}/webapp@${{ env.IMAGE_DIGEST }}'|" charts/webapp/values.yaml
+          sed -i "s|repository:.*|repository: '${{ secrets.DOCKER_HUB_USERNAME }}/webapp@${{ env.IMAGE_DIGEST }}'|" ./values.yaml
+          cat ./values.yaml | grep repository
           
-          # git add charts/webapp/values.yaml
+          # git add ./values.yaml
           # git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
           # git push origin main
