@@ -28,6 +28,8 @@ jobs:
   docker-scan:
     needs: sast
     runs-on: ubuntu-latest
+    outputs:
+      image-digest: ${{ steps.get_digest.outputs.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -85,6 +87,12 @@ jobs:
           NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
+      - name: Get image digest
+        id: get_digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' myuser/webapp:latest)
+          echo "Digest: $DIGEST"
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
 
      # Build et scan image Docker
@@ -95,9 +103,8 @@ jobs:
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
-          echo "IMAGE_DIGEST=$DIGEST"
-          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST=${{ needs.build_and_push.outputs.image-digest }}"
+          echo "IMAGE_DIGEST=${{ needs.build_and_push.outputs.image-digest }}" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
