@@ -85,4 +85,32 @@ jobs:
           NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
+
+
+     # Build et scan image Docker
+  helm-hash-update:
+    needs: docker-scan
+    runs-on: ubuntu-latest
+    steps:   
+      - name: Récupérer le digest de l'image pushée
+        id: get_digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
+          echo "IMAGE_DIGEST=$DIGEST"
+          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+
+      - name: Cloner le repo Helm
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
+          git clone https://x-access-token:${{ secrets.GIT_TOKEN_REPO_HELM }}@github.com/${{ secrets.GIT_USERNAME }}/${{ variable.HELM_REPOSITORY_NAME }}
+          cd ${{ variable.HELM_REPOSITORY_PATH }}
+          ls
+          
+          # Remplacer l'image dans values.yaml (adapte selon ta structure YAML)
+          # sed -i "s|image:.*|image: '${{ secrets.DOCKER_HUB_USERNAME }}/webapp@${{ env.IMAGE_DIGEST }}'|" charts/webapp/values.yaml
+          
+          # git add charts/webapp/values.yaml
+          # git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
+          # git push origin main
