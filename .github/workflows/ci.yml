@@ -95,7 +95,7 @@ jobs:
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
 
-     # Build et scan image Docker
+  # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
   helm-hash-update:
     needs: docker-scan
     runs-on: ubuntu-latest
@@ -106,14 +106,18 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
-          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
-          echo "TOKEN=$(echo "$TOKEN" | tr -d '\n')" >> $GITHUB_ENV
+          REGISTRY_TOKEN=$(curl -s \
+            "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${{ secrets.DOCKER_HUB_USERNAME }}/webapp:pull" \
+            | jq -r .token)
+          echo "REGISTRY_TOKEN=$(echo "$REGISTRY_TOKEN" | tr -d '\n')" >> $GITHUB_ENV
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          DIGEST=$(curl -sI -H "Authorization: JWT $TOKEN" \
-            https://registry.hub.docker.com/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest \
-            -H "Accept: application/vnd.docker.distribution.manifest.v2+json")
+          DIGEST=$(curl -sI \
+                -H "Authorization: Bearer $REGISTRY_TOKEN" \
+                -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+                https://registry-1.docker.io/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest \
+                | grep Docker-Content-Digest | awk '{ print $2 }' | tr -d '\r')          
           echo "Digest: $DIGEST"
           # echo "digest=$DIGEST" >> $GITHUB_ENV
 
