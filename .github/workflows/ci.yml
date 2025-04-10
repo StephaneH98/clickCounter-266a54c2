@@ -103,8 +103,8 @@ jobs:
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.image-digest }}"
-          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.image-digest }}" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.digest }}"
+          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.digest }}" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
