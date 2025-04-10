@@ -116,8 +116,7 @@ jobs:
           DIGEST=$(curl -sI \
                 -H "Authorization: Bearer $REGISTRY_TOKEN" \
                 -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-                https://registry-1.docker.io/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest \
-                | grep Docker-Content-Digest | awk '{ print $2 }' | tr -d '\r')          
+                https://registry-1.docker.io/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest)          
           echo "Digest: $DIGEST"
           # echo "digest=$DIGEST" >> $GITHUB_ENV
 
