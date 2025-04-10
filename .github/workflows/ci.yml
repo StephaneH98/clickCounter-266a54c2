@@ -100,11 +100,23 @@ jobs:
     needs: docker-scan
     runs-on: ubuntu-latest
     steps:   
+      - name: Get Docker Hub Token
+        id: get_token
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          echo "TOKEN=$(echo "$TOKEN" | tr -d '\n')" >> $GITHUB_ENV
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.digest }}"
-          echo "IMAGE_DIGEST=${{ needs.docker-scan.outputs.digest }}" >> $GITHUB_ENV
+          DIGEST=$(curl -sI -H "Authorization: JWT $TOKEN" \
+            https://registry.hub.docker.com/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            | grep Docker-Content-Digest | awk '{ print $2 }' | tr -d '\r')
+          echo "Digest: $DIGEST"
+          echo "digest=$DIGEST" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
