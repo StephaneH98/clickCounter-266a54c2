@@ -90,7 +90,7 @@ jobs:
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest | cut -d'@' -f2)
           echo "Digest: $DIGEST"
           echo "digest=${{ env.MAJOR }}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
