@@ -101,24 +101,11 @@ jobs:
     needs: docker-scan
     runs-on: ubuntu-latest
     steps:   
-      # - name: Get Docker Hub Token
-      #   id: get_token
-      #   env:
-      #     DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      #     DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-      #   run: |
-      #     REGISTRY_TOKEN=$(curl -s \
-      #       "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${{ secrets.DOCKER_HUB_USERNAME }}/webapp:pull" \
-      #       | jq -r .token)
-      #     echo "REGISTRY_TOKEN=$(echo "$REGISTRY_TOKEN" | tr -d '\n')"
-      #     echo "REGISTRY_TOKEN=$(echo "$REGISTRY_TOKEN" | tr -d '\n')" >> $GITHUB_ENV
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
           DIGEST=${{ needs.docker-scan.outputs.image_digest }}
-          echo "Valeur récupérée : ${{ needs.docker-scan.outputs.image_digest }}"
-          echo "Digest: $DIGEST"
-          echo "digest=$DIGEST" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
