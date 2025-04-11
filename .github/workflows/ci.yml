@@ -92,7 +92,7 @@ jobs:
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
           echo "Digest: $DIGEST"
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "DIGEST=$DIGEST" >> $GITHUB_OUTPUT
 
 
   # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
@@ -114,10 +114,7 @@ jobs:
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          DIGEST=$(curl -sI \
-                -H "Authorization: Bearer $REGISTRY_TOKEN" \
-                -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
-                https://registry-1.docker.io/v2/${{ secrets.DOCKER_HUB_USERNAME }}/webapp/manifests/latest)          
+          DIGEST=${{ needs.docker-scan.outputs.DIGEST }}
           echo "Digest: $DIGEST"
           # echo "digest=$DIGEST" >> $GITHUB_ENV
 
