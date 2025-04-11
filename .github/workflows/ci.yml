@@ -29,7 +29,7 @@ jobs:
     needs: sast
     runs-on: ubuntu-latest
     outputs:
-      image-digest: ${{ steps.get_digest.outputs.digest }}
+      image_digest: ${{ steps.get_digest.outputs.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -92,7 +92,7 @@ jobs:
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
           echo "Digest: $DIGEST"
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "digest=${{ env.MAJOR }}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
 
@@ -115,8 +115,8 @@ jobs:
       - name: Récupérer le digest de l'image pushée
         id: get_digest
         run: |
-          DIGEST=${{ needs.docker-scan.outputs.image-digest }}
-          echo "Valeur récupérée : ${{ needs.docker-scan.outputs.image-digest }}"
+          DIGEST=${{ needs.docker-scan.outputs.image_digest }}
+          echo "Valeur récupérée : ${{ needs.docker-scan.outputs.image_digest }}"
           echo "Digest: $DIGEST"
           # echo "digest=$DIGEST" >> $GITHUB_ENV
 
