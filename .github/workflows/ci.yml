@@ -93,7 +93,7 @@ jobs:
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest)
           echo "Digest: $DIGEST"
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "$GITHUB_OUTPUT"
+          cat $GITHUB_OUTPUT
 
 
   # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
