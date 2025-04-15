@@ -2,6 +2,9 @@
 - - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
 
 ## [MINOR] - 2025-04-15
+- - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
+
+## [MINOR] - 2025-04-15
 <<<<<<< HEAD
 =======
 - - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
