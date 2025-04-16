@@ -299,24 +299,24 @@ jobs:
         run: git log --oneline --graph --decorate -n 10
 
       # 🔹 Update CHANGELOG.md
-      # - name: Update CHANGELOG.md
-      #   id: update_changelog
-      #   run: |
-      #     DATE=$(date +'%Y-%m-%d')
-      #     echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
+      - name: Update CHANGELOG.md
+        id: update_changelog
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
 
-      # # 🔹 Commit and push changelog
-      # - name: Commit and push changelog
-      #   id: commit_and_push_changelog
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     git config user.name "github-actions"
-      #     git config user.email "github-actions@github.com"
-      #     git pull origin dev
-      #     git add CHANGELOG.md
-      #     git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
-      #     git push origin dev
+      # 🔹 Commit and push changelog
+      - name: Commit and push changelog
+        id: commit_and_push_changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git pull origin dev
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
+          git push origin dev
 
       - name: Set up Git
         run: |
