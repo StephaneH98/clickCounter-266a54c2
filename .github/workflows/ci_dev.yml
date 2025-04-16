@@ -336,8 +336,9 @@ jobs:
       - name: Check if PR already exists
         id: check_pr
         run: |
-          pr_url=$(gh pr view dev --base main --json url -q .url || echo "")
+          pr_url=$(gh pr view dev --json url -q .url || echo "")
           echo "PR_URL=$pr_url" >> $GITHUB_ENV
+
       - name: Update PR body
         if: env.PR_URL != ''
         run: |
