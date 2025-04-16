@@ -322,6 +322,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin dev
 
       - name: Check current branch
         id: get_branch
@@ -339,6 +340,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
         run: |
           pr_url=$(gh pr view dev --json url -q .url || echo "")
+          echo "PR_URL=$pr_url"
           echo "PR_URL=$pr_url" >> $GITHUB_ENV
 
       - name: Update PR body
