@@ -99,6 +99,60 @@ jobs:
           echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_ENV
           echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_OUTPUT
           echo "Version type detected: $VERSION_TYPE"
+      
+      - name: Generate changelog entry with OpenAI
+        id: generate_changelog
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_CHANGELOG_SYSTEM_PROMPT: ${{ vars.AI_CHANGELOG_SYSTEM_PROMPT }}
+          AI_CHANGELOG_USER_PROMPT: ${{ vars.AI_CHANGELOG_USER_PROMPT }}
+        run: |
+            JSON_PAYLOAD=$(jq -n \
+              --arg model "gpt-3.5-turbo" \
+              --arg content_system "$AI_CHANGELOG_SYSTEM_PROMPT" \
+              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat diff_content.txt)" \
+              '{
+                model: $model,
+                messages: [
+                  { role: "system", content: $content_system },
+                  { role: "user", content: $content_user }
+                ],
+                temperature: 0
+              }'
+            )
+  
+            RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$JSON_PAYLOAD")
+  
+            echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
+            echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
+            echo "DIFF_FILE: $(cat $DIFF_FILE)"
+            cat $DIFF_FILE
+            echo $RESPONSE
+            CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
+            echo $CHANGELOG_LINE > changelog_line.txt
+            echo "Generated changelog entry: $CHANGELOG_LINE"
+            # 🔹 Update CHANGELOG.md
+      - name: Update CHANGELOG.md
+        id: update_changelog
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
+
+      # 🔹 Commit and push changelog
+      - name: Commit and push changelog
+        id: commit_and_push_changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git pull origin dev
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
+          git push origin dev
 
 
   # Build et scan image Docker
@@ -209,41 +263,7 @@ jobs:
           git clone https://x-access-token:${{ env.GIT_TOKEN_REPO_HELM }}@github.com/${{ env.GIT_USERNAME }}/${{ env.HELM_REPOSITORY_NAME }}
           
          
-      - name: Generate changelog entry with OpenAI
-        id: generate_changelog
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          AI_CHANGELOG_SYSTEM_PROMPT: ${{ vars.AI_CHANGELOG_SYSTEM_PROMPT }}
-          AI_CHANGELOG_USER_PROMPT: ${{ vars.AI_CHANGELOG_USER_PROMPT }}
-          DIFF_FILE: ${{ needs.semantic-versioning.outputs.diff_file }}
-        run: |
-            JSON_PAYLOAD=$(jq -n \
-              --arg model "gpt-3.5-turbo" \
-              --arg content_system "$AI_CHANGELOG_SYSTEM_PROMPT" \
-              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat $DIFF_FILE)" \
-              '{
-                model: $model,
-                messages: [
-                  { role: "system", content: $content_system },
-                  { role: "user", content: $content_user }
-                ],
-                temperature: 0
-              }'
-            )
-  
-            RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
-              -H "Authorization: Bearer $OPENAI_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "$JSON_PAYLOAD")
-  
-            echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
-            echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
-            echo "DIFF_FILE: $(cat $DIFF_FILE)"
-            cat $DIFF_FILE
-            echo $RESPONSE
-            CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
-            echo $CHANGELOG_LINE > changelog_line.txt
-            echo "Generated changelog entry: $CHANGELOG_LINE"
+      
 
       # 🔹 Connexion à Docker Hub
       - name: Login to Docker Hub
@@ -303,25 +323,7 @@ jobs:
       - name: Show current commits
         run: git log --oneline --graph --decorate -n 10
 
-      # 🔹 Update CHANGELOG.md
-      - name: Update CHANGELOG.md
-        id: update_changelog
-        run: |
-          DATE=$(date +'%Y-%m-%d')
-          echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
-
-      # 🔹 Commit and push changelog
-      - name: Commit and push changelog
-        id: commit_and_push_changelog
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git pull origin dev
-          git add CHANGELOG.md
-          git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
-          git push origin dev
+      
 
       - name: Set up Git
         run: |
