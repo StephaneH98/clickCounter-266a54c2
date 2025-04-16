@@ -45,9 +45,12 @@ jobs:
       - name: Get list of changed files
         id: get_diff
         run: |
-          git fetch origin main
-          CHANGED_FILES=$(git diff --name-only origin/main..HEAD | grep -v CHANGELOG.md | tr '\n' ' ')
+          echo "Diff from ${{ github.event.before }} to ${{ github.sha }}"
+          
+          # Récupérer la liste des fichiers modifiés (hors CHANGELOG.md)
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -v CHANGELOG.md | tr '\n' ' ')
           echo "CHANGED_FILES=$CHANGED_FILES"
+          
           # Créer un fichier temporaire pour stocker le contenu des diffs
           DIFF_FILE="diff_content.txt"
           > $DIFF_FILE  # Crée ou vide le fichier
@@ -55,14 +58,14 @@ jobs:
           # Récupérer le contenu des différences pour chaque fichier modifié
           for file in $CHANGED_FILES; do
             echo "Processing file: $file" >> $DIFF_FILE
-            git diff origin/main..HEAD -- $file >> $DIFF_FILE
+            git diff ${{ github.event.before }} ${{ github.sha }} -- $file >> $DIFF_FILE
             echo -e "\n\n" >> $DIFF_FILE  # Ajouter une séparation entre les diffs des fichiers
           done
 
           echo "Diff content saved to: $DIFF_FILE"
           # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
-          echo "$(cat diff_content.txt)"
           echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
+          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_OUTPUT
 
       - name: Determine version type with OpenAI
         id: determine_version
