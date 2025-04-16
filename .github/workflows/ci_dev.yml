@@ -1,0 +1,328 @@
+name: Dev CI Pipeline Secure 
+
+on:
+  push:
+    branches: [ dev ]
+  workflow_dispatch: 
+
+permissions:
+  contents: write
+  pull-requests: write  # créer ou commenter une PR
+
+jobs:
+  # Analyse statique
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Semgrep
+        id: semgrep
+        uses: returntocorp/semgrep-action@v1
+        continue-on-error: true
+
+      - name: Run Gitleaks (secrets scan)
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: "--verbose --redact"
+        continue-on-error: true
+
+
+  semantic-versioning:
+    runs-on: ubuntu-latest
+    needs: sast
+    outputs:
+      version_type: ${{ steps.determine_version.outputs.VERSION_TYPE }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get list of changed files
+        id: get_diff
+        run: |
+          git fetch origin main
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | tr '\n' ' ')
+          echo "CHANGED_FILES=$CHANGED_FILES"
+          # Créer un fichier temporaire pour stocker le contenu des diffs
+          DIFF_FILE="diff_content.txt"
+          > $DIFF_FILE  # Crée ou vide le fichier
+
+          # Récupérer le contenu des différences pour chaque fichier modifié
+          for file in $CHANGED_FILES; do
+            echo "Processing file: $file" >> $DIFF_FILE
+            git diff origin/main...HEAD -- $file >> $DIFF_FILE
+            echo -e "\n\n" >> $DIFF_FILE  # Ajouter une séparation entre les diffs des fichiers
+          done
+
+          echo "Diff content saved to: $DIFF_FILE"
+          # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
+          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
+
+      - name: Determine version type with OpenAI
+        id: determine_version
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_SYSTEM_PROMPT: ${{ vars.AI_VERSIONING_SYSTEM_PROMPT }}
+          AI_USER_PROMPT: ${{ vars.AI_VERSIONING_USER_PROMPT }}
+        run: |
+          # Lire le fichier de diffs et envoyer son contenu à Hugging Face
+          # cat $DIFF_FILE  # Juste pour déboguer et voir le contenu du fichier
+
+          JSON_PAYLOAD=$(jq -n \
+            --arg model "gpt-3.5-turbo" \
+            --arg content_system "$AI_SYSTEM_PROMPT" \
+            --arg content_user "$AI_USER_PROMPT $DIFF_FILE" \
+            '{
+              model: $model,
+              messages: [
+                { role: "system", content: $content_system },
+                { role: "user", content: $content_user }
+              ],
+              temperature: 0
+            }'
+          )
+
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$JSON_PAYLOAD")
+          
+          echo $RESPONSE
+          VERSION_TYPE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')
+          echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_ENV
+          echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_OUTPUT
+          echo "Version type detected: $VERSION_TYPE"
+
+
+  # Build et scan image Docker
+  docker-scan:
+    needs: [sast, semantic-versioning]
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.increment_tag.outputs.NEW_TAG }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get Docker Hub Token
+        id: get_token
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        run: |
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          echo "TOKEN=$(echo "$TOKEN" | tr -d '\n')" >> $GITHUB_ENV
+      - name: Get Docker image tags list
+        id: get_tags_list
+        run: |
+          TAG_LIST=$(curl -s -H "Authorization: JWT $TOKEN"   https://hub.docker.com/v2/repositories/stephanehamaili/webapp/tags)
+          LATEST_TAG=$(echo "$TAG_LIST" | jq -r '.results | map(.name) | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort | last')
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_TAG"
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
+
+      # 🔹 Incrémentation automatique (ex: 1.0.3 → 1.0.4)
+      - name: Increment tag
+        id: increment_tag
+        run: |
+          VERSION_TYPE="${{ needs.semantic-versioning.outputs.version_type }}"
+          case "$VERSION_TYPE" in
+            MAJOR)
+              MAJOR=$((${{ env.MAJOR }} + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            MINOR)
+              MINOR=$((${{ env.MINOR }} + 1))
+              PATCH=0
+              ;;
+            PATCH)
+              PATCH=$((${{ env.PATCH }} + 1))
+              ;;
+            *)
+              echo "Unknown version type"
+              exit 1
+              ;;
+          esac
+
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
+
+          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      # 🔹 Build Docker image avec les nouveaux tags
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
+
+      # 🔹 Scan de l'image avec Trivy
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}
+          format: 'table'
+          output: 'trivy-scan-report.json'
+          exit-code: '0'  # Faille => build n'échoue pas. Passer à 1 pour que ça échoue en cas de failles
+      
+      
+
+
+  # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
+  helm-hash-update:
+    needs: [docker-scan, semantic-versioning]
+    runs-on: ubuntu-latest
+    steps:   
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Récupérer les outputs
+        id: get_outputs
+        run: |
+          VERSION_TYPE=${{ needs.semantic-versioning.outputs.version_type }}
+          NEW_TAG=${{ needs.docker-scan.outputs.new_tag }}
+          echo "VERSION_TYPE=$VERSION_TYPE" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Cloner le repo Helm
+        id: clone_helm_repo
+        env:
+          GIT_TOKEN_REPO_HELM: ${{ secrets.GIT_TOKEN_REPO_HELM }}
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
+          HELM_REPOSITORY_NAME: ${{ vars.HELM_REPOSITORY_NAME }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git clone https://x-access-token:${{ env.GIT_TOKEN_REPO_HELM }}@github.com/${{ env.GIT_USERNAME }}/${{ env.HELM_REPOSITORY_NAME }}
+          
+         
+      - name: Generate changelog entry with OpenAI
+        id: generate_changelog
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AI_CHANGELOG_SYSTEM_PROMPT: ${{ vars.AI_CHANGELOG_SYSTEM_PROMPT }}
+          AI_CHANGELOG_USER_PROMPT: ${{ vars.AI_CHANGELOG_USER_PROMPT }}
+        run: |
+            JSON_PAYLOAD=$(jq -n \
+              --arg model "gpt-3.5-turbo" \
+              --arg content_system "$AI_CHANGELOG_SYSTEM_PROMPT" \
+              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat $DIFF_FILE)" \
+              '{
+                model: $model,
+                messages: [
+                  { role: "system", content: $content_system },
+                  { role: "user", content: $content_user }
+                ],
+                temperature: 0
+              }'
+            )
+  
+            RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$JSON_PAYLOAD")
+  
+            echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
+            echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
+            echo "DIFF_FILE: $(cat $DIFF_FILE)"
+            echo $RESPONSE
+            CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
+            echo $CHANGELOG_LINE > changelog_line.txt
+            echo "Generated changelog entry: $CHANGELOG_LINE"
+
+      # 🔹 Connexion à Docker Hub
+      - name: Login to Docker Hub
+        id: login_docker_hub
+        env:
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        run: |
+          echo "${{ env.DOCKER_HUB_TOKEN }}" | docker login -u "${{ env.DOCKER_HUB_USERNAME }}" --password-stdin
+
+
+      # 🔹 Build Docker image avec les nouveaux tags
+      - name: Build Docker image
+        id: build_docker_image
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          NEW_TAG: ${{ needs.docker-scan.outputs.new_tag }}
+        run: |
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
+
+      # 🔹 Push des images (nouvelle version + latest)
+      - name: Push Docker image
+        id: push_docker_image
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          NEW_TAG: ${{ needs.docker-scan.outputs.new_tag }}
+        run: |
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/webapp:latest
+
+
+      - name: Get image digest
+        id: get_digest
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        run: |
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} | cut -d'@' -f2)
+          echo "Digest: $DIGEST"
+          echo "Digest= $(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }})"
+          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+
+      # 🔹 Update helm chart
+      - name: update helm chart
+        id: update_helm
+        env:
+          IMAGE_DIGEST: ${{ env.IMAGE_DIGEST }}
+          HELM_REPOSITORY_PATH: ${{ vars.HELM_REPOSITORY_PATH }}
+        run: |
+          cd ${{ env.HELM_REPOSITORY_PATH }}
+          git checkout dev
+          sed -i "s|digest:.*|digest: '${{ env.IMAGE_DIGEST }}'|" ./values.yaml
+          cat ./values.yaml | grep digest
+          
+          git add ./values.yaml
+          git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
+          git push origin dev
+
+      # 🔹 Update CHANGELOG.md
+      # - name: Update CHANGELOG.md
+      #   id: update_changelog
+      #   run: |
+      #     DATE=$(date +'%Y-%m-%d')
+      #     echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
+
+      # # 🔹 Commit and push changelog
+      # - name: Commit and push changelog
+      #   id: commit_and_push_changelog
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git config user.name "github-actions"
+      #     git config user.email "github-actions@github.com"
+      #     git pull origin dev
+      #     git add CHANGELOG.md
+      #     git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
+      #     git push origin dev
+
+      # 🔹 Create pull request
+      - name: Create PR from Dev to main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GIT_ACTIONS_PR_BOT }}
+          base: main
+          branch: dev
+          title: "🔀 Fusion Dev → Main"
+          body: |
+            Ce PR fusionne la branche `dev` dans `main`.
