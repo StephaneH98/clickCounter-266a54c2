@@ -339,7 +339,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
         run: |
-          pr_url=$(gh pr view dev --json url -q .url || echo "")
+          pr_url=$(gh pr list --base main --head dev --state open --json url -q '.[0].url' || echo "")
           echo "PR_URL=$pr_url"
           echo "PR_URL=$pr_url" >> $GITHUB_ENV
 
