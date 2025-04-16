@@ -333,7 +333,18 @@ jobs:
         run: |
           git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
 
+      - name: Check if PR already exists
+        id: check_pr
+        run: |
+          pr_url=$(gh pr view dev --base main --json url -q .url || echo "")
+          echo "PR_URL=$pr_url" >> $GITHUB_ENV
+      - name: Update PR body
+        if: env.PR_URL != ''
+        run: |
+          gh pr edit "$PR_URL" --body "$(gh pr view "$PR_URL" --json body -q .body)\n\n$(cat changelog_line.txt)"
+
       - name: Create Pull Request with gh CLI
+        if: env.PR_URL == ''
         env:
           GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
         run: |
