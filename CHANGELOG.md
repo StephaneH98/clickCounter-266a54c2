@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-16
+- Mise à jour de la génération du changelog pour exclure le fichier CHANGELOG.md.
+
+## [MINOR] - 2025-04-16
 - - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
 
 ## [MINOR] - 2025-04-16
