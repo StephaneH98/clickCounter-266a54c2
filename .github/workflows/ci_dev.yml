@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:   
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -290,11 +290,13 @@ jobs:
           cd ${{ env.HELM_REPOSITORY_PATH }}
           git checkout dev
           sed -i "s|digest:.*|digest: '${{ env.IMAGE_DIGEST }}'|" ./values.yaml
-          cat ./values.yaml | grep digest
+          # cat ./values.yaml | grep digest
           
           git add ./values.yaml
           git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
           git push origin dev
+      - name: Show current commits
+        run: git log --oneline --graph --decorate -n 10
 
       # 🔹 Update CHANGELOG.md
       # - name: Update CHANGELOG.md
@@ -316,13 +318,44 @@ jobs:
       #     git commit -m "chore: update changelog for $VERSION_TYPE release" || echo "No changes to commit"
       #     git push origin dev
 
-      # 🔹 Create pull request
-      - name: Create PR from Dev to main
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GIT_ACTIONS_PR_BOT }}
-          base: main
-          branch: dev
-          title: "🔀 Fusion Dev → Main"
-          body: |
-            Ce PR fusionne la branche `dev` dans `main`.
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check current branch
+        id: get_branch
+        run: |
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)"
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Push branch to origin if not yet pushed
+        run: |
+          git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
+
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
+        run: |
+          pr_url=$(gh pr view dev --json url -q .url || echo "")
+          echo "PR_URL=$pr_url" >> $GITHUB_ENV
+
+      - name: Update PR body
+        if: env.PR_URL != ''
+        env:
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
+        run: |
+          gh pr edit "$PR_URL" --body "$(gh pr view "$PR_URL" --json body -q .body)\n\n$(cat changelog_line.txt)"
+
+      - name: Create Pull Request with gh CLI
+        if: env.PR_URL == ''
+        env:
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
+        run: |
+          gh pr create \
+            --base main \
+            --head ${{ steps.get_branch.outputs.branch }} \
+            --title "Auto PR from ${{ steps.get_branch.outputs.branch }}" \
+            --body "This PR was created automatically via GitHub Actions.
+            $(cat changelog_line.txt)"
