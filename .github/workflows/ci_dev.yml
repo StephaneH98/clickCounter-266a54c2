@@ -60,6 +60,7 @@ jobs:
 
           echo "Diff content saved to: $DIFF_FILE"
           # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
+          echo "$(cat diff_content.txt)"
           echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
 
       - name: Determine version type with OpenAI
