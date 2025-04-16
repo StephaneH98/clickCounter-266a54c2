@@ -35,6 +35,7 @@ jobs:
     needs: sast
     outputs:
       version_type: ${{ steps.determine_version.outputs.VERSION_TYPE }}
+      diff_file: ${{ steps.get_diff.outputs.DIFF_FILE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -62,6 +63,7 @@ jobs:
           # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
           echo "$(cat diff_content.txt)"
           echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
+          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_OUTPUT
 
       - name: Determine version type with OpenAI
         id: determine_version
@@ -213,6 +215,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           AI_CHANGELOG_SYSTEM_PROMPT: ${{ vars.AI_CHANGELOG_SYSTEM_PROMPT }}
           AI_CHANGELOG_USER_PROMPT: ${{ vars.AI_CHANGELOG_USER_PROMPT }}
+          DIFF_FILE: ${{ needs.semantic-versioning.outputs.diff_file }}
         run: |
             JSON_PAYLOAD=$(jq -n \
               --arg model "gpt-3.5-turbo" \
