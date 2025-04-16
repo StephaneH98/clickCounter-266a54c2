@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-16
+- - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
+
+## [MINOR] - 2025-04-16
 - - Ajout de la génération automatique d'entrée de journal des modifications avec OpenAI.
 
 ## [MINOR] - 2025-04-16
