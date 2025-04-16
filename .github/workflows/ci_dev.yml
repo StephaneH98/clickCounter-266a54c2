@@ -290,7 +290,7 @@ jobs:
           cd ${{ env.HELM_REPOSITORY_PATH }}
           git checkout dev
           sed -i "s|digest:.*|digest: '${{ env.IMAGE_DIGEST }}'|" ./values.yaml
-          cat ./values.yaml | grep digest
+          # cat ./values.yaml | grep digest
           
           git add ./values.yaml
           git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
