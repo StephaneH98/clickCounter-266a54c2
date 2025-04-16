@@ -5,9 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compteur Web</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      background-color: var(--bg-color, #1b95ce);
+      transition: background-color 0.3s ease;
+    }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     #counter { font-size: 2em; margin-top: 20px; }
+    .color-picker-container {
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
@@ -18,6 +26,12 @@
   <script>
     const counterDiv = document.getElementById('counter');
     const incrementButton = document.getElementById('incrementButton');
+    const colorPicker = document.getElementById('colorPicker');
+
+    // Changer la couleur de fond quand on sélectionne une nouvelle couleur
+    colorPicker.addEventListener('input', function(e) {
+      document.documentElement.style.setProperty('--bg-color', e.target.value);
+    });
 
     // Fonction pour récupérer et afficher la dernière valeur du compteur
     async function getCounterValue() {
