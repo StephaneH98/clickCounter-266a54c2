@@ -343,6 +343,8 @@ jobs:
 
       - name: Update PR body
         if: env.PR_URL != ''
+        env:
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
         run: |
           gh pr edit "$PR_URL" --body "$(gh pr view "$PR_URL" --json body -q .body)\n\n$(cat changelog_line.txt)"
 
