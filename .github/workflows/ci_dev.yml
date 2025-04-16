@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:   
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -318,7 +318,7 @@ jobs:
 
       # 🔹 Create pull request
       - name: Create PR from Dev to main
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GIT_ACTIONS_PR_BOT }}
           base: main
