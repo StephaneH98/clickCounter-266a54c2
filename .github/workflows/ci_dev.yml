@@ -63,7 +63,7 @@ jobs:
           # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
           echo "$(cat diff_content.txt)"
           echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
-          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_OUTPUT
+          echo "DIFF_FILE=$(cat diff_content.txt)" >> $GITHUB_OUTPUT
 
       - name: Determine version type with OpenAI
         id: determine_version
@@ -73,7 +73,7 @@ jobs:
           AI_USER_PROMPT: ${{ vars.AI_VERSIONING_USER_PROMPT }}
         run: |
           # Lire le fichier de diffs et envoyer son contenu à Hugging Face
-          # cat $DIFF_FILE  # Juste pour déboguer et voir le contenu du fichier
+          cat $DIFF_FILE  # Juste pour déboguer et voir le contenu du fichier
 
           JSON_PAYLOAD=$(jq -n \
             --arg model "gpt-3.5-turbo" \
