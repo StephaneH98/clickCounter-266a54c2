@@ -295,6 +295,8 @@ jobs:
           git add ./values.yaml
           git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
           git push origin dev
+      - name: Show current commits
+        run: git log --oneline --graph --decorate -n 10
 
       # 🔹 Update CHANGELOG.md
       # - name: Update CHANGELOG.md
@@ -323,6 +325,6 @@ jobs:
           token: ${{ secrets.GIT_ACTIONS_PR_BOT }}
           base: main
           branch: dev
-          title: "🔀 Fusion Dev → Main"
+          title: "🔀 Fusion dev → Main"
           body: |
             Ce PR fusionne la branche `dev` dans `main`.
