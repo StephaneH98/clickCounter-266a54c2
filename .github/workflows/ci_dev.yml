@@ -46,7 +46,7 @@ jobs:
         id: get_diff
         run: |
           git fetch origin main
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | tr '\n' ' ')
+          CHANGED_FILES=$(git diff --name-only origin/main..HEAD | grep -v CHANGELOG.md | tr '\n' ' ')
           echo "CHANGED_FILES=$CHANGED_FILES"
           # Créer un fichier temporaire pour stocker le contenu des diffs
           DIFF_FILE="diff_content.txt"
@@ -55,7 +55,7 @@ jobs:
           # Récupérer le contenu des différences pour chaque fichier modifié
           for file in $CHANGED_FILES; do
             echo "Processing file: $file" >> $DIFF_FILE
-            git diff origin/main...HEAD -- $file >> $DIFF_FILE
+            git diff origin/main..HEAD -- $file >> $DIFF_FILE
             echo -e "\n\n" >> $DIFF_FILE  # Ajouter une séparation entre les diffs des fichiers
           done
 
@@ -127,7 +127,7 @@ jobs:
   
             echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
             echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
-            echo "DIFF_FILE: $(cat $DIFF_FILE)"
+            echo "DIFF_FILE: $(cat changelog_line.txt)"
             cat $DIFF_FILE
             echo $RESPONSE
             CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
