@@ -341,4 +341,5 @@ jobs:
             --base main \
             --head ${{ steps.get_branch.outputs.branch }} \
             --title "Auto PR from ${{ steps.get_branch.outputs.branch }}" \
-            --body "This PR was created automatically via GitHub Actions."
+            --body "This PR was created automatically via GitHub Actions.
+            $(cat changelog_line.txt)"
