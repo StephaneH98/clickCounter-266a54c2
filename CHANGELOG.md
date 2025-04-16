@@ -1,4 +1,13 @@
 ## [MINOR] - 2025-04-16
+- ℹ️ Ajout de la gestion des fichiers modifiés dans le workflow CI_dev.yml
+
+## [MINOR] - 2025-04-16
+- Mise à jour de la génération du changelog pour exclure le fichier CHANGELOG.md.
+
+## [MINOR] - 2025-04-16
+- - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
+
+## [MINOR] - 2025-04-16
 - - Ajout de la génération automatique d'entrée de journal des modifications avec OpenAI.
 
 ## [MINOR] - 2025-04-16
