@@ -335,7 +335,7 @@ jobs:
 
       - name: Create Pull Request with gh CLI
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_PR_BOT }}
         run: |
           gh pr create \
             --base main \
