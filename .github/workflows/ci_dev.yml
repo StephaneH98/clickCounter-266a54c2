@@ -236,6 +236,7 @@ jobs:
             echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
             echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
             echo "DIFF_FILE: $(cat $DIFF_FILE)"
+            cat $DIFF_FILE
             echo $RESPONSE
             CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
             echo $CHANGELOG_LINE > changelog_line.txt
