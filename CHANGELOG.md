@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-16
+- ℹ️ Ajout de la gestion des fichiers modifiés dans le workflow CI_dev.yml
+
+## [MINOR] - 2025-04-16
 - Mise à jour de la génération du changelog pour exclure le fichier CHANGELOG.md.
 
 ## [MINOR] - 2025-04-16
