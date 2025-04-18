@@ -279,22 +279,32 @@ jobs:
           NEW_TAG=${{ needs.semantic-versioning.outputs.new_tag }}
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
 
-
-  # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
-  helm-hash-update:
-    needs: [docker-scan, semantic-versioning]
-    runs-on: ubuntu-latest
-    steps:   
       - name: Get image digest
         id: get_digest
         run: |
           NEW_TAG=${{ needs.semantic-versioning.outputs.new_tag }}
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG | cut -d'@' -f2)
           echo "Digest: $DIGEST"
-          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_OUTPUT
+
+
+  # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
+  helm-hash-update:
+    needs: [docker-scan, semantic-versioning]
+    runs-on: ubuntu-latest
+    steps:   
+      # - name: Get image digest
+      #   id: get_digest
+      #   run: |
+      #     NEW_TAG=${{ needs.semantic-versioning.outputs.new_tag }}
+      #     DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG | cut -d'@' -f2)
+      #     echo "Digest: $DIGEST"
+      #     echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
 
       - name: Cloner le repo Helm
         run: |
+          IMAGE_DIGEST=${{ needs.docker-scan.outputs.image_digest }}
+          echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
