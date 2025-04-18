@@ -1,3 +1,6 @@
+## [1.4.0] - 2025-04-18
+- Mettre à jour le fichier ci_prod.yml pour utiliser la nouvelle balise de version dans le changelog et l'image digest correcte.
+
 ## [PATCH] - 2025-04-18
 - - Mise à jour de la gestion du hash dans le fichier values.yaml du repo helm.
 
