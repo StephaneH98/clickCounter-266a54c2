@@ -230,7 +230,7 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           NEW_TAG: ${{ needs.docker-scan.outputs.new_tag }}
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}-dev -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
 
       # 🔹 Push des images (nouvelle version + latest)
       - name: Push Docker image
