@@ -42,6 +42,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Print PR diff
+        run: |
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.event.pull_request.merge_commit_sha }}
+
+          echo "🔍 Diff from $BASE_SHA to $HEAD_SHA:"
+          git diff $BASE_SHA $HEAD_SHA > pr_diff.txt
+          cat pr_diff.txt
+
       - name: Get list of changed files
         id: get_diff
         run: |
