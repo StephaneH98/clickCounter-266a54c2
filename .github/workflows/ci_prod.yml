@@ -7,8 +7,12 @@ on:
       - main
   workflow_dispatch: 
 
-jobs:
 
+permissions:
+  contents: write
+  pull-requests: write  # créer ou commenter une PR
+
+jobs:
    # Analyse statique
   sast:
     runs-on: ubuntu-latest
