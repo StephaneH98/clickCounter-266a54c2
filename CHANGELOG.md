@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-18
+- - Ajout de la variable `new_tag` pour les sorties dans le workflow CI de production.
+
+## [MINOR] - 2025-04-18
 - - Correction d'un bug d'affichage sur la page de profil - - Ajout d'une fonctionnalité de recherche avancée - - Mise à jour du design de la page d'accueil
 
 ## [MINOR] - 2025-04-18
