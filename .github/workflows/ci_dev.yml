@@ -166,7 +166,7 @@ jobs:
       # 🔹 Build Docker image avec les nouveaux tags
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}-dev -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appOnly/app
 
       # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
@@ -239,7 +239,7 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           NEW_TAG: ${{ needs.docker-scan.outputs.new_tag }}
         run: |
-          docker push ${{ env.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}-dev
           docker push ${{ env.DOCKER_HUB_USERNAME }}/webapp:latest
 
 
