@@ -223,7 +223,7 @@ jobs:
           echo "${{ env.DOCKER_HUB_TOKEN }}" | docker login -u "${{ env.DOCKER_HUB_USERNAME }}" --password-stdin
 
 
-      # 🔹 Build Docker image avec les nouveaux tags
+      # 🔹 Build Docker image  avec les nouveaux tags
       - name: Build Docker image
         id: build_docker_image
         env:
@@ -273,21 +273,22 @@ jobs:
 
       
 
-      - name: Set up Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull origin dev
+      # - name: Set up Git
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git config pull.rebase true
+      #     git pull origin dev
 
-      - name: Check current branch
-        id: get_branch
-        run: |
-          echo "branch=$(git rev-parse --abbrev-ref HEAD)"
-          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+      # - name: Check current branch
+      #   id: get_branch
+      #   run: |
+      #     echo "branch=$(git rev-parse --abbrev-ref HEAD)"
+      #     echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Push branch to origin if not yet pushed
-        run: |
-          git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
+      # - name: Push branch to origin if not yet pushed
+      #   run: |
+      #     git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
 
       - name: Check if PR already exists
         id: check_pr
