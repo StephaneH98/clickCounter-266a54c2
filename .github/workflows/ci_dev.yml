@@ -183,7 +183,7 @@ jobs:
 
   # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
   helm-hash-update:
-    needs: [docker-scan, semantic-versioning]
+    needs: [docker-scan]
     runs-on: ubuntu-latest
     steps:   
       - name: Checkout code
