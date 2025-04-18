@@ -314,9 +314,9 @@ jobs:
           cat ./values.yaml | grep repository
           
           # Remplacer l'image dans values.yaml (adapte selon ta structure YAML)
-          sed -i "s|repository:.*|repository: '${{ secrets.DOCKER_HUB_USERNAME }}/webapp@${{ env.IMAGE_DIGEST }}'|" ./values.yaml
+          sed -i "s|repository:.*|repository: '${{ secrets.DOCKER_HUB_USERNAME }}/webapp@$IMAGE_DIGEST'|" ./values.yaml
           cat ./values.yaml | grep repository
           
           git add ./values.yaml
-          git commit -m "Update image to ${{ env.IMAGE_DIGEST }} from CI"
+          git commit -m "Update image to $IMAGE_DIGEST from CI"
           git push origin main
