@@ -250,9 +250,10 @@ jobs:
           echo "TOKEN=$(echo "$TOKEN" | tr -d '\n')" >> $GITHUB_ENV
       
       - name: Build Docker image
+        id: build_docker_image
         run: |
           NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} ./appWithDB/app
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG ./appWithDB/app
 
       # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
