@@ -7,8 +7,12 @@ on:
       - main
   workflow_dispatch: 
 
-jobs:
 
+permissions:
+  contents: write
+  pull-requests: write  # créer ou commenter une PR
+
+jobs:
    # Analyse statique
   sast:
     runs-on: ubuntu-latest
@@ -156,7 +160,7 @@ jobs:
 
   # Build et scan image Docker
   docker-scan:
-    needs: sast
+    needs: [sast, semantic-versioning]
     runs-on: ubuntu-latest
     outputs:
       image_digest: ${{ steps.get_digest.outputs.digest }}
@@ -177,7 +181,9 @@ jobs:
         run: |
           TAG_LIST=$(curl -s -H "Authorization: JWT $TOKEN"   https://hub.docker.com/v2/repositories/stephanehamaili/webapp/tags)
           LATEST_TAG=$(echo "$TAG_LIST" | jq -r '.results | map(.name) | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort | last')
+          LAST_DEV_TAG=$(echo "$TAG_LIST" | jq -r '.results[].name' | grep '\-dev' | sort -Vr | head -n 1)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST_TAG"
+          echo "LAST_DEV_TAG=$LAST_DEV_TAG"
           echo "MAJOR=$MAJOR" >> $GITHUB_ENV
           echo "MINOR=$MINOR" >> $GITHUB_ENV
           echo "PATCH=$PATCH" >> $GITHUB_ENV
@@ -186,8 +192,33 @@ jobs:
       - name: Increment tag
         id: increment_tag
         run: |
-          NEW_PATCH=$((PATCH + 1))
-          echo "NEW_PATCH=$NEW_PATCH" >> $GITHUB_ENV
+          VERSION_TYPE="${{ needs.semantic-versioning.outputs.version_type }}"
+          case "$VERSION_TYPE" in
+            MAJOR)
+              MAJOR=$((${{ env.MAJOR }} + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            MINOR)
+              MINOR=$((${{ env.MINOR }} + 1))
+              PATCH=0
+              ;;
+            PATCH)
+              PATCH=$((${{ env.PATCH }} + 1))
+              ;;
+            *)
+              echo "Unknown version type"
+              exit 1
+              ;;
+          esac
+
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
+
+          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-dev"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
 
       # 🔹 Build Docker image avec les nouveaux tags
       - name: Build Docker image
@@ -199,7 +230,7 @@ jobs:
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.new_tag }}
+          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
           format: 'table'
           output: 'trivy-scan-report.json'
           exit-code: '0'  # Faille => build n'échoue pas. Passer à 1 pour que ça échoue en cas de failles
