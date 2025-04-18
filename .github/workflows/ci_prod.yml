@@ -202,7 +202,7 @@ jobs:
   
             echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
             echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
-            echo "DIFF_FILE: $(cat $pr_diff.txt)"
+            echo "DIFF_FILE: $(cat pr_diff.txt)"
             cat pr_diff.txt
             echo $RESPONSE
             CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
@@ -276,8 +276,8 @@ jobs:
       # 🔹 Push des images (nouvelle version + latest)
       - name: Push Docker image
         run: |
-          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }}
+          NEW_TAG=${{ needs.semantic-versioning.outputs.new_tag }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
 
 
   # 🔹 Mise à jour du hash dans le fichier values.yaml du repo helm
@@ -288,7 +288,8 @@ jobs:
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:${{ env.NEW_TAG }} | cut -d'@' -f2)
+          NEW_TAG=${{ needs.semantic-versioning.outputs.new_tag }}
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG | cut -d'@' -f2)
           echo "Digest: $DIGEST"
           echo "IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
 
