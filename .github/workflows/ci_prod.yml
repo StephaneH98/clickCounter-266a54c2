@@ -167,7 +167,7 @@ jobs:
           echo "MINOR=$MINOR_VALUE" >> $GITHUB_ENV
           echo "PATCH=$PATCH_VALUE" >> $GITHUB_ENV
 
-          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-dev"
+          NEW_TAG="$MAJOR_VALUE.$MINOR_VALUE.$PATCH_VALUE"
           echo "NEW_TAG=$NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
