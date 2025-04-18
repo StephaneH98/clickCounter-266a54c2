@@ -303,7 +303,7 @@ jobs:
 
       - name: Cloner le repo Helm
         run: |
-          IMAGE_DIGEST=${{ needs.semantic-versioning.outputs.image_digest }}
+          IMAGE_DIGEST=${{ needs.docker-scan.outputs.image_digest }}
           echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
