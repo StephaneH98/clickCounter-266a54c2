@@ -193,7 +193,7 @@ jobs:
       - name: Build Docker image
         run: |
           NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest ./appWithDB/app
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:stable ./appWithDB/app
 
       # 🔹 Scan de l'image avec Trivy
       - name: Scan Docker image with Trivy
@@ -216,11 +216,11 @@ jobs:
         run: |
           NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.NEW_PATCH }}"
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:$NEW_TAG
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:stable
       - name: Get image digest
         id: get_digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:latest | cut -d'@' -f2)
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.DOCKER_HUB_USERNAME }}/webapp:stable | cut -d'@' -f2)
           echo "Digest: $DIGEST"
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
