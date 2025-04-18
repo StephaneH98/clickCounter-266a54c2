@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-18
+- - Met à jour la récupération du tag de version Docker dans les workflows CI.
+
+## [MINOR] - 2025-04-18
 - - Ajout de la variable `new_tag` pour les sorties dans le workflow CI de production.
 
 ## [MINOR] - 2025-04-18
