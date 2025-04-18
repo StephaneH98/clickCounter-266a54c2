@@ -1,3 +1,6 @@
+## [PATCH] - 2025-04-18
+- - Mise à jour de la gestion du hash dans le fichier values.yaml du repo helm.
+
 ## [MINOR] - 2025-04-18
 - ℹ️ Ajout de la dépendance "semantic-versioning" pour la tâche "helm-hash-update" dans le workflow CI de production.
 
