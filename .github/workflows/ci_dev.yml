@@ -274,7 +274,7 @@ jobs:
       
   create-MR:
     runs-on: ubuntu-latest
-    needs: [helm-update]
+    needs: [helm-hash-update]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
