@@ -1,3 +1,6 @@
+## [1.5.1] - 2025-04-18
+- Mettre à jour l'image dans `values.yaml` avec la variable `$IMAGE_DIGEST` au lieu de `${{ env.IMAGE_DIGEST }}` dans le workflow CI de production.
+
 ## [1.5.0] - 2025-04-18
 - Mettre à jour la référence de l'image Docker dans le workflow CI de production.
 
