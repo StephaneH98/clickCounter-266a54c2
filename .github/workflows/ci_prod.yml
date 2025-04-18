@@ -183,7 +183,7 @@ jobs:
             JSON_PAYLOAD=$(jq -n \
               --arg model "gpt-3.5-turbo" \
               --arg content_system "$AI_CHANGELOG_SYSTEM_PROMPT" \
-              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat $pr_diff.txt)" \
+              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat pr_diff.txt)" \
               '{
                 model: $model,
                 messages: [
