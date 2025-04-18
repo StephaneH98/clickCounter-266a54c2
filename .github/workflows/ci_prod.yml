@@ -144,10 +144,13 @@ jobs:
               PATCH_VALUE=0
               ;;
             MINOR)
+              MAJOR_VALUE=${{ env.MAJOR }}
               MINOR_VALUE=$((${{ env.MINOR }} + 1))
               PATCH_VALUE=0
               ;;
             PATCH)
+              MAJOR_VALUE=${{ env.MAJOR }}
+              MINOR_VALUE=${{ env.MINOR }}
               PATCH_VALUE=$((${{ env.PATCH }} + 1))
               ;;
             *)
@@ -164,7 +167,7 @@ jobs:
           echo "MINOR=$MINOR_VALUE" >> $GITHUB_ENV
           echo "PATCH=$PATCH_VALUE" >> $GITHUB_ENV
 
-          NEW_TAG="${{ env.MAJOR_VALUE }}.${{ env.MINOR_VALUE }}.${{ env.PATCH_VALUE }}-dev"
+          NEW_TAG="${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-dev"
           echo "NEW_TAG=$NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
@@ -199,7 +202,7 @@ jobs:
             echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
             echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
             echo "DIFF_FILE: $(cat $pr_diff.txt)"
-            cat $pr_diff.txt
+            cat pr_diff.txt
             echo $RESPONSE
             CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
             echo $CHANGELOG_LINE > changelog_line.txt
