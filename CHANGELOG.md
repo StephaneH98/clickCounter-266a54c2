@@ -1,4 +1,7 @@
 ## [MINOR] - 2025-04-18
+- ℹ️ Ajout de la dépendance "semantic-versioning" pour la tâche "helm-hash-update" dans le workflow CI de production.
+
+## [MINOR] - 2025-04-18
 - - Met à jour la récupération du tag de version Docker dans les workflows CI.
 
 ## [MINOR] - 2025-04-18
