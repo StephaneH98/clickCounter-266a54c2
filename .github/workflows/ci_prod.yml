@@ -51,31 +51,40 @@ jobs:
           git diff $BASE_SHA $HEAD_SHA > pr_diff.txt
           cat pr_diff.txt
 
-      - name: Get list of changed files
-        id: get_diff
+      # - name: Get list of changed files
+      #   id: get_diff
+      #   run: |
+      #     echo "Diff from ${{ github.event.before }} to ${{ github.sha }}"
+          
+      #     # Récupérer la liste des fichiers modifiés (hors CHANGELOG.md)
+      #     CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -v CHANGELOG.md | tr '\n' ' ')
+      #     echo "CHANGED_FILES=$CHANGED_FILES"
+          
+      #     # Créer un fichier temporaire pour stocker le contenu des diffs
+      #     DIFF_FILE="diff_content.txt"
+      #     > $DIFF_FILE  # Crée ou vide le fichier
+
+      #     # Récupérer le contenu des différences pour chaque fichier modifié
+      #     for file in $CHANGED_FILES; do
+      #       echo "Processing file: $file" >> $DIFF_FILE
+      #       git diff ${{ github.event.before }} ${{ github.sha }} -- $file >> $DIFF_FILE
+      #       echo -e "\n\n" >> $DIFF_FILE  # Ajouter une séparation entre les diffs des fichiers
+      #     done
+
+      #     echo "Diff content saved to: $DIFF_FILE"
+      #     echo "Diff content = $(cat $DIFF_FILE)"
+      #     # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
+      #     echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
+      #     echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_OUTPUT
+
+      - name: Get Docker Hub Token
+        id: get_token
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
-          echo "Diff from ${{ github.event.before }} to ${{ github.sha }}"
-          
-          # Récupérer la liste des fichiers modifiés (hors CHANGELOG.md)
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -v CHANGELOG.md | tr '\n' ' ')
-          echo "CHANGED_FILES=$CHANGED_FILES"
-          
-          # Créer un fichier temporaire pour stocker le contenu des diffs
-          DIFF_FILE="diff_content.txt"
-          > $DIFF_FILE  # Crée ou vide le fichier
-
-          # Récupérer le contenu des différences pour chaque fichier modifié
-          for file in $CHANGED_FILES; do
-            echo "Processing file: $file" >> $DIFF_FILE
-            git diff ${{ github.event.before }} ${{ github.sha }} -- $file >> $DIFF_FILE
-            echo -e "\n\n" >> $DIFF_FILE  # Ajouter une séparation entre les diffs des fichiers
-          done
-
-          echo "Diff content saved to: $DIFF_FILE"
-          echo "Diff content = $(cat $DIFF_FILE)"
-          # Sauvegarder le chemin du fichier dans une variable d'environnement pour l'utiliser dans une étape suivante
-          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_ENV
-          echo "DIFF_FILE=$DIFF_FILE" >> $GITHUB_OUTPUT
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DOCKER_HUB_USERNAME }}", "password": "${{ secrets.DOCKER_HUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          echo "TOKEN=$(echo "$TOKEN" | tr -d '\n')" >> $GITHUB_ENV
 
       - name: Get Docker image tags list
         id: get_tags_list
@@ -133,12 +142,12 @@ jobs:
           AI_USER_PROMPT: ${{ vars.AI_VERSIONING_USER_PROMPT }}
         run: |
           # Lire le fichier de diffs et envoyer son contenu à Hugging Face
-          cat $DIFF_FILE  # Juste pour déboguer et voir le contenu du fichier
+          cat $pr_diff.txt  # Juste pour déboguer et voir le contenu du fichier
 
           JSON_PAYLOAD=$(jq -n \
             --arg model "gpt-3.5-turbo" \
             --arg content_system "$AI_SYSTEM_PROMPT" \
-            --arg content_user "$AI_USER_PROMPT $(cat $DIFF_FILE)" \
+            --arg content_user "$AI_USER_PROMPT $(cat $pr_diff.txt)" \
             '{
               model: $model,
               messages: [
@@ -170,7 +179,7 @@ jobs:
             JSON_PAYLOAD=$(jq -n \
               --arg model "gpt-3.5-turbo" \
               --arg content_system "$AI_CHANGELOG_SYSTEM_PROMPT" \
-              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat diff_content.txt)" \
+              --arg content_user "$AI_CHANGELOG_USER_PROMPT $(cat $pr_diff.txt)" \
               '{
                 model: $model,
                 messages: [
@@ -188,8 +197,8 @@ jobs:
   
             echo "AI_CHANGELOG_SYSTEM_PROMPT: $AI_CHANGELOG_SYSTEM_PROMPT"
             echo "AI_CHANGELOG_USER_PROMPT: $AI_CHANGELOG_USER_PROMPT"
-            echo "DIFF_FILE: $(cat changelog_line.txt)"
-            cat $DIFF_FILE
+            echo "DIFF_FILE: $(cat $pr_diff.txt)"
+            cat $pr_diff.txt
             echo $RESPONSE
             CHANGELOG_LINE=$(echo "$RESPONSE" | jq -r '.choices[0].message.content' | sed 's/^/- /')
             echo $CHANGELOG_LINE > changelog_line.txt
