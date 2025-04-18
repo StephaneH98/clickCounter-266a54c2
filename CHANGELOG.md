@@ -1,3 +1,6 @@
+## [1.5.0] - 2025-04-18
+- Mettre à jour la référence de l'image Docker dans le workflow CI de production.
+
 ## [1.4.0] - 2025-04-18
 - Mettre à jour le fichier ci_prod.yml pour utiliser la nouvelle balise de version dans le changelog et l'image digest correcte.
 
