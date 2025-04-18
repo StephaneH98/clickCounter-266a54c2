@@ -136,7 +136,7 @@ jobs:
       - name: Increment tag
         id: increment_tag
         run: |
-          VERSION_TYPE="${{ needs.semantic-versioning.outputs.version_type }}"
+          VERSION_TYPE="${{ env.VERSION_TYPE }}"
           case "$VERSION_TYPE" in
             MAJOR)
               MAJOR_VALUE=$((${{ env.MAJOR }} + 1))
