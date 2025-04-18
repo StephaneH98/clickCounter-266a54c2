@@ -214,7 +214,7 @@ jobs:
         id: update_changelog
         run: |
           DATE=$(date +'%Y-%m-%d')
-          echo -e "## [$VERSION_TYPE] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
+          echo -e "## [$NEW_TAG] - $DATE\n$(cat changelog_line.txt)\n\n$(cat CHANGELOG.md)" > CHANGELOG.md
 
       # 🔹 Commit and push changelog
       - name: Commit and push changelog
@@ -235,7 +235,7 @@ jobs:
     needs: [sast, semantic-versioning]
     runs-on: ubuntu-latest
     outputs:
-      image_digest: ${{ steps.get_digest.outputs.digest }}
+      image_digest: ${{ steps.get_digest.outputs.IMAGE_DIGEST }}
       new_tag: ${{ steps.increment_tag.outputs.NEW_TAG }}
     steps:
       - name: Checkout code
@@ -303,7 +303,7 @@ jobs:
 
       - name: Cloner le repo Helm
         run: |
-          IMAGE_DIGEST=${{ needs.docker-scan.outputs.image_digest }}
+          IMAGE_DIGEST=${{ needs.semantic-versioning.outputs.image_digest }}
           echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
