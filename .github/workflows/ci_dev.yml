@@ -272,23 +272,28 @@ jobs:
         run: git log --oneline --graph --decorate -n 10
 
       
+  create-MR:
+    runs-on: ubuntu-latest
+    needs: [helm-update]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # - name: Set up Git
-      #   run: |
-      #     git config user.name "github-actions[bot]"
-      #     git config user.email "github-actions[bot]@users.noreply.github.com"
-      #     git config pull.rebase true
-      #     git pull origin dev
+      - name: Check current branch
+        id: get_branch
+        run: |
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)"
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
 
-      # - name: Check current branch
-      #   id: get_branch
-      #   run: |
-      #     echo "branch=$(git rev-parse --abbrev-ref HEAD)"
-      #     echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
-
-      # - name: Push branch to origin if not yet pushed
-      #   run: |
-      #     git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
+      - name: Push branch to origin if not yet pushed
+        run: |
+          git push -u origin ${{ steps.get_branch.outputs.branch }} || echo "Already pushed"
 
       - name: Check if PR already exists
         id: check_pr
